@@ -40,7 +40,6 @@ int main(void){
     uint8_t currentBtn = 0;
     uint8_t previousBtn = 0;
     uint8_t is_led_set = 0;
-    
 
     for(;;){
 
