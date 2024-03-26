@@ -1,10 +1,7 @@
-#include <stm32f091xc.h>
+#include "main.h"
+#include "mci_clock.h"
 
-
-#define CLOCK_CYCLES_PER_SECOND  48000000
-#define MAX_RELOAD               0xFFFF
-
-
+#define C
 
 
 /**
@@ -26,14 +23,8 @@ int delay(uint32_t time){
  */
 int main(void){
 
-    // Set the frequency of the PWM signal
-    uint32_t freq = 1000; // 1 Khz
-    // Calculate the period of the PWM signal
-    uint32_t period_cycles = CLOCK_CYCLES_PER_SECOND / freq;
+    SystemClock_Config();
 
-    // Calculate the prescaler and overflow values
-    uint16_t prescaler = (uint16_t)(period_cycles / MAX_RELOAD + 1);
-    uint16_t overflow = (uint16_t)((period_cycles + (prescaler / 2)) / prescaler);
 
     // Enable the GPIOA and TIM2 peripherals
     RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
@@ -48,8 +39,8 @@ int main(void){
     TIM2->CR1 &= ~TIM_CR1_CEN;
     
     // Set the prescaler and overflow values
-    TIM2->PSC = prescaler;
-    TIM2->ARR = overflow;
+    TIM2->PSC = 0;
+    TIM2->ARR = 47999/2;
     TIM2->CCR1 = 0;
 
     // Set the PWM mode 1
@@ -65,24 +56,11 @@ int main(void){
     // Set the center-aligned mode 
     TIM2->CR1 |= TIM_CR1_CMS_0 | TIM_CR1_CEN;
 
-    
-    uint32_t duty_c = 0;
-    uint16_t duty_step = 100;
+    uint16_t duty = 5999/2;
+
 
     for(;;){
-        // Increase the duty cycle
-        while(duty_c < MAX_RELOAD)
-        {
-            TIM2->CCR1 = duty_c;
-            duty_c += duty_step;
-            delay(10000);
-        }
-        // Decrease the duty cycle
-        while(duty_c > 0)
-        {
-            TIM2->CCR1 = duty_c;
-            duty_c -= duty_step;
-            delay(10000);
-        }
-    }   
+
+        TIM2->CCR1 = duty;
+    }
 }
