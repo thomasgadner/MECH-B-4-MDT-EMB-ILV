@@ -1,46 +1,65 @@
-#include "main.h"
+#define STM32F091xC
+#include <stm32f0xx.h>
+#include "mci_clock.h"
+
+#define DEBUG
+
+// This is a simple macro to print debug messages of DEBUG is defined
+#ifdef DEBUG
+  #define LOG( msg... ) printf( msg );
+#else
+  #define LOG( msg... ) ;
+#endif
+
+// Select the Baudrate for the UART
+#define BAUDRATE 9600
 
 
-#define flash_latency (0x1UL << (0U))
-#define RCC_PLLSOURCE_HSI (0x00008000U)
-#define RCC_PLL_MUL_12 (0x00280000U)
-#define RCC_PREDIV_DIV_2 (0x00000001U)
-#define RCC_SYS_CLKSOURCE_PLL (0x00000002U)
-#define RCC_SYS_CLKSOURCE_STATUS_PLL (0x00000008U)
-
-
-void SystemClock_Config(void){
-    MODIFY_REG(FLASH->ACR, FLASH_ACR_LATENCY, flash_latency);
-    while(READ_BIT(FLASH->ACR, FLASH_ACR_LATENCY) != flash_latency){
+// For supporting printf function we override the _write function to redirect the output to UART
+int _write( int handle, char* data, int size ) {
+    int count = size;
+    while( count-- ) {
+        while( !( USART2->ISR & USART_ISR_TXE ) ) {};
+        USART2->TDR = *data++;
     }
-    SET_BIT(RCC->CR, RCC_CR_HSION);
-
-    while (((READ_BIT(RCC->CR, RCC_CR_HSIRDY) == (RCC_CR_HSIRDY)))  != 1 ){
-    }
-    
-    MODIFY_REG(RCC->CR, RCC_CR_HSITRIM, 16 << RCC_CR_HSITRIM_Pos);
-    MODIFY_REG(RCC->CFGR, RCC_CFGR_PLLSRC | RCC_CFGR_PLLMUL, RCC_PLLSOURCE_HSI | RCC_PLL_MUL_12);
-    MODIFY_REG(RCC->CFGR2, RCC_CFGR2_PREDIV, RCC_PREDIV_DIV_2);
-
-    SET_BIT(RCC->CR, RCC_CR_PLLON);
-
-    while(((READ_BIT(RCC->CR, RCC_CR_PLLRDY) == (RCC_CR_PLLRDY))) != 1){
-    }
-
-    MODIFY_REG(RCC->CFGR, RCC_CFGR_HPRE, 0);
-    MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE, 0);
-    MODIFY_REG(RCC->CFGR, RCC_CFGR_SW, RCC_SYS_CLKSOURCE_PLL);
-
-    while((uint32_t)(READ_BIT(RCC->CFGR, RCC_CFGR_SWS)) != RCC_SYS_CLKSOURCE_STATUS_PLL){
-
-    }
-    SystemCoreClock = 48000000;
+    return size;
 }
 
-
 int main(void){
-    SystemClock_Config();
-    for(;;){
+    // Configure the system clock to 48MHz
+    EPL_SystemClock_Config();
 
+    // Enable peripheral  GPIOA clock
+    RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
+    // Enable peripheral  USART2 clock
+    RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
+
+    // Configure PA2 as USART2_TX using alternate function 1
+    GPIOA->MODER |= GPIO_MODER_MODER2_1;
+    GPIOA->AFR[0] |= 0b0001 << (4*2);
+
+
+    // Configure PA3 as USART2_RX using alternate function 1
+    GPIOA->MODER |= GPIO_MODER_MODER3_1;
+    GPIOA->AFR[0] |= 0b0001 << (4*3);
+
+    // Configure the UART Baude rate Register 
+    USART2->BRR = (APB_FREQ / BAUDRATE);
+    // Enable the UART using the CR1 register
+    USART2->CR1 |= ( USART_CR1_RE | USART_CR1_TE | USART_CR1_UE );
+
+
+    uint8_t rxb = '\0';
+
+    for(;;){
+    // Wait for the data to be received
+    while( !( USART2->ISR & USART_ISR_RXNE ) ){
+
+    };
+    // Read the data from the RX buffer
+    rxb = USART2->RDR;
+    
+    // Print the data to the console using the LOG macro which is defined above and calls printf which uses _write, which is overriden to redirect the output to UART
+    LOG("[DEBUG-LOG]: %d\r\n", rxb );
     }
 }
