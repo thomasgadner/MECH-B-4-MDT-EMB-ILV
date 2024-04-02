@@ -23,7 +23,7 @@ int delay(uint32_t time){
  */
 int main(void){
 
-    SystemClock_Config();
+    EPL_SystemClock_Config();
 
 
     // Enable the GPIOA and TIM2 peripherals
