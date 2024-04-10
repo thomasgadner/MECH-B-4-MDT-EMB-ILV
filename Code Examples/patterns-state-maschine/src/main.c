@@ -56,7 +56,7 @@ void stateA(void){
   if( Clock == 2 ) { /* Change State? */
     curr_state = STATE_B; /* Next State */
     Out=1;
-  	}
+  }
 }
 
 
@@ -68,9 +68,9 @@ void stateB(void){
 }
 void stateC(void){
   if( Clock == 9 ) { /* Change State? */
-  Clock = 0;
-  curr_state = STATE_A; /* Next State */
-  Out=0;
+	Clock = 0;
+	curr_state = STATE_A; /* Next State */
+	Out=0;
   }
 }
 void initializeSM(void)
