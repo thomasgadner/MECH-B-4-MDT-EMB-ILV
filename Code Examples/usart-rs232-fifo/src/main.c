@@ -1,3 +1,11 @@
+/*
+----------------------------------------------------------------------------
+ * Notes:
+ * This project is currently under construction and has not yet been fully tested.
+ * Use with caution.
+ * ----------------------------------------------------------------------------
+ */
+
 #include <stm32f0xx.h>
 #include "epl_clock.h"
 #include "epl_usart.h"
@@ -19,10 +27,7 @@ int delay(uint32_t time){
 
 int main(void){
 
-    /*Active Development:
-        tx: tested and working
-        rx: rx fifo not tested
-    */
+
 
     epl_usart_t myusart;
     myusart.baudrate = 9600;
