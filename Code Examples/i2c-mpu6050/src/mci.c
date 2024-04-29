@@ -41,7 +41,6 @@ void EPL_SystemClock_Config(void)
 }
 
 
-
 void EPL_init_Debug_UART(){
      // Enable peripheral  GPIOA clock
     RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
