@@ -739,8 +739,9 @@ def main(sio, is_player1, single_game, play_level, official_result):
                     if rd['R'] != 'HM':
                         st = MainStates.UNEXPECTED
                         continue
-                    fire_state.update(coord, rd['hm'] == 'H')
-                    if rd['hm'] == 'H':
+                    we_hit = rd['hm'] == 'T'
+                    fire_state.update(coord, we_hit)
+                    if we_hit:
                         logging.info("we hit at {},{}".format(*coord))
                     else:
                         logging.info("we miss at {},{}".format(*coord))
@@ -788,6 +789,11 @@ def main(sio, is_player1, single_game, play_level, official_result):
                             st = MainStates.ERROR
                             break
                         their_r[rd['l']] = rd['r']
+                    for i in range(0, FIELD_SZ):
+                        if not i in their_r.keys():
+                            rd = { 'R': 'ERROR', 'text': 'SF lines not correct'}
+                            st = MainStates.ERROR
+                            break
 
                 # print the state of our field and their field
                 if we_won:
@@ -886,5 +892,5 @@ if __name__ == "__main__":
         trace_level = 2 # INFO
     logging.basicConfig(level=trace_level*10)   # c.f. python default logging levels
 
-    s = serial.serial_for_url(ser, 115200, timeout=2)
+    s = serial.serial_for_url(ser, 9600, timeout=2)
     main(s, is_player1, single_game, play_level, official_result)
